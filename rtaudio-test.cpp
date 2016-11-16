@@ -26,20 +26,26 @@ int main()
 
 	std::cout << "nChannels:" << nChannels << std::endl;
 
-	SignalBuffer playBuffer(nChannels, 1024*48*6);
-	SignalBufferObserver observer(playBuffer);
+	const int len = 2 << 14;
+
+	SignalBuffer playBuffer(nChannels, len);
+	SignalBuffer inBuffer(nc, playBuffer.size);
+
+
+	SignalBufferObserver observer(playBuffer, inBuffer);
 
 
 	for (int i = 0; i < nChannels; i++) {
-		autil::test::generateMusic(playBuffer.getPtrTQ(i), playBuffer.size);
+		autil::test::generateNoise(playBuffer.getPtrTQ(i), playBuffer.size);
 	}
 
-	autil::fileio::writeWave("music.wav", std::vector<float>(playBuffer.getPtrTQ(0), playBuffer.getPtrTQ(0) + playBuffer.size - 1));
+	
 
 	autil::AudioDriver::Request req(&driver);
 
 	req
 		.addSignal(&playBuffer, "out", autil::AudioDriver::Connect::ToPlayback)
+		.addSignal(&inBuffer, "in", autil::AudioDriver::Connect::ToCapture)
 		.addObserver(&observer)
 		.execute();
 
@@ -48,9 +54,19 @@ int main()
 
 	observer.waitForCommit();
 
-	req.remove(&playBuffer).remove(&observer).execute();
+	req
+		.remove(&playBuffer)
+		.remove(&inBuffer)
+		.remove(&observer)
+		.execute();
 
 	driver.muteOthers(false);
+
+	inBuffer.normalize();
+
+
+	autil::fileio::writeWave("music.wav", std::vector<float>(playBuffer.getPtrTQ(0), playBuffer.getPtrTQ(0) + playBuffer.size - 1));
+	autil::fileio::writeWave("music-recorded.wav", std::vector<float>(inBuffer.getPtrTQ(0), inBuffer.getPtrTQ(0) + inBuffer.size - 1));
 
 
     return 0;
