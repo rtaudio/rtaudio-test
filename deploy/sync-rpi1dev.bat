@@ -1,0 +1,1 @@
+%USERPROFILE%\ownCloud\etc\apps\winscp\WinSCP.exe /loglevel=2 /log=log.txt /script=dirsync.txt /parameter root:root@192.168.2.103 /root/dev/rtaudio-test

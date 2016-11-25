@@ -1,3 +1,7 @@
 [submodule "rtt"]
 	path = rtt
 	url = https://github.com/rtaudio/rtt
+	
+[submodule "autil"]
+	path = autil
+	url = https://github.com/rtaudio/autil
