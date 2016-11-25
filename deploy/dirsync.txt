@@ -1,0 +1,4 @@
+option confirm off 
+open sftp://%1% -hostkey="%3%"
+synchronize remote ../ "%2%" -filemask="*.c; *.cpp; *.h; CMakeLists.txt | CMakeCache.txt; .*/; enc_temp*/; *examples/; Debug/; Release/; x64/; out/; latency_analysis/; CMakeFiles/; deploy/;" -transfer=binary
+keepuptodate ../ "%2%" -filemask="*.c; *.cpp; *.h; CMakeLists.txt | CMakeCache.txt; .*/; enc_temp*/; *examples/; Debug/; Release/; x64/; out/; latency_analysis/; CMakeFiles/; deploy/;" -transfer=binary

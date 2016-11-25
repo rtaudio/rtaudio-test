@@ -17,4 +17,6 @@ unsuccessfulbuild
 *.log
 *.VC.opendb
 *.VC.db
-/*.dll
+*.dll
+*.vcxproj.user
+/Release/*.ipdb
