@@ -9,15 +9,18 @@
 #include <chrono>
 #include <iostream>
 
-
-#include <autil/audio_driver.h>
+#ifndef _WIN32
+#include <autil/audio_driver_alsa.h>
+#else
+#include <autil/audio_driver_alsa.h>
+#endif
 #include <autil/test.h>
 #include <autil/file_io.h>
 #include <autil/fft.h>
 #include <autil/logging.h>
 #include <autil/net.h>
 
-void latencyTest(autil::AudioDriver &driver) {
+void latencyTest(autil::AudioDriverBase &driver) {
 
 	int nChannels = (std::min)(driver.getNumPlaybackChannels(), driver.getNumCaptureChannels());
 
@@ -34,11 +37,11 @@ void latencyTest(autil::AudioDriver &driver) {
 		autil::test::generateSweep(playBuffer.getPtrTQ(i), playBuffer.size);
 	}
 
-	autil::AudioDriver::Request req(&driver);
+    autil::AudioDriverBase::Request req(&driver);
 
 	req
-		.addBuffer(&playBuffer, autil::AudioDriver::Connect::ToPlayback)
-		.addBuffer(&inBuffer, autil::AudioDriver::Connect::ToCapture);
+        .addBuffer(&playBuffer, autil::AudioDriverBase::Connect::ToPlayback)
+        .addBuffer(&inBuffer, autil::AudioDriverBase::Connect::ToCapture);
 
 	req.executeAndObserve(&calibrationObserver);
 	calibrationObserver.waitForCommit();
@@ -133,8 +136,8 @@ void latencyTest(autil::AudioDriver &driver) {
 
 		while (true) {
 			req
-				.addBuffer(&streamPlayBuffer, autil::AudioDriver::Connect::ToPlayback)
-				.addBuffer(&streamInBuffer, autil::AudioDriver::Connect::ToCapture);
+                .addBuffer(&streamPlayBuffer, autil::AudioDriverBase::Connect::ToPlayback)
+                .addBuffer(&streamInBuffer, autil::AudioDriverBase::Connect::ToCapture);
 			req.executeAndObserve(&streamObserver);
 			streamObserver.waitForCommit();
 
@@ -172,26 +175,31 @@ void latencyTest(autil::AudioDriver &driver) {
 	
 }
 
-int main1()
+int main()
 {
-	autil::AudioDriver driver("rtaudio-testing");
-	driver.muteOthers(true);
+    autil::AudioDriverAlsa::StreamProperties sp;
+    sp.blockSize = 256;
+    sp.numChannelsCapture = 2;
+    sp.numChannelsPlayback = 2;
+    sp.sampleRate = 48000;
+    autil::AudioDriverAlsa driver("hw:1,0", sp);
+    //driver.muteOthers(true);
 
 
 
 
-	std::vector<int> blockSizes{ 8, 16, 32, 48, 64, 96, 128, 256 };
+    std::vector<int> blockSizes{ 1024 }; //8, 16, 32, 48, 64, 96, 128, 256 };
 
 	for (auto bs : blockSizes) {
 		try { driver.setBlockSize(bs); }
-		catch (std::exception e) {
+        catch (std::exception) {
 			continue;
 		}
 		latencyTest			(driver);
 	}
 
 
-	driver.muteOthers(false);
+    //driver.muteOthers(false);
 
 	
 
